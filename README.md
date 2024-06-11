@@ -3,6 +3,10 @@
 
 This will add a beautiful embedded time picker to your website. 
 
+## Overview 
+
+Time Slot Picker is a versatile and user-friendly jQuery plugin designed to facilitate the selection of time slots within web applications. Whether you're building a booking system, a reservation platform, or any application requiring precise time slot selection, this plugin provides a seamless and intuitive solution.
+
 
 ## Installation 
 
@@ -55,7 +59,10 @@ $('#time-slot-input').on('timeSlotDiscarded',function(){
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/)
 
-  
+## Acknowledgements
+
+Special thanks to the jQuery community and all the contributors who helped make this project possible.
+ 
 ## Support
 
 For support, email email2randika@gmail.com.
