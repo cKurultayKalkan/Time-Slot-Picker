@@ -32,7 +32,10 @@ $('#time-slot-picker').timeSlotPicker(
         minDateTime:'2021-05-28 10:15',
         minDayTime:'09:00',
         maxDayTime:'18:00',
-        inputElementSelector:'#time-slot-input'
+        inputElementSelector:'#time-slot-input',
+        disabledDays: ['2025-03-25'],
+        disabledSlots: ['2025-03-26 09:00'],
+        disabledRanges: [{start: '2025-03-27 13:00', end: '2025-03-27 16:00'}]
     }
 );
 ```

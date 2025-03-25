@@ -11,8 +11,45 @@
             maxDayTime:null,
             skipWeekends:false,
             defaultDate:convertDateObjectToFormat(new Date(),'YYYY-MM-DD'),
-            inputElementSelector:null
+            inputElementSelector:null,
+            disabledSlots: null,
+            disabledDays: null,
+            disabledRanges: null
         }, options );
+
+        var disabledDaysMidnightTimestamps = [];
+        if (Array.isArray(settings.disabledDays)) {
+            settings.disabledDays.forEach(function(dd){
+                var d = (dd instanceof Date) ? dd : new Date(dd);
+                if (!isNaN(d.getTime())) {
+                    d.setHours(0,0,0,0);
+                    disabledDaysMidnightTimestamps.push(d.getTime());
+                }
+            });
+        }
+
+        var disabledSlotsTimestamps = [];
+        if (Array.isArray(settings.disabledSlots)) {
+            settings.disabledSlots.forEach(function(ds){
+                var d = (ds instanceof Date) ? ds : new Date(ds);
+                if (!isNaN(d.getTime())) {
+                    disabledSlotsTimestamps.push(d.getTime());
+                }
+            });
+        }
+
+        var disabledRangesArray = [];
+        if (Array.isArray(settings.disabledRanges)) {
+            settings.disabledRanges.forEach(function(rangeObj){
+                var startDate = (rangeObj.start instanceof Date) ? rangeObj.start : new Date(rangeObj.start);
+                var endDate   = (rangeObj.end   instanceof Date) ? rangeObj.end   : new Date(rangeObj.end);
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                    var rangeStart = Math.min(startDate.getTime(), endDate.getTime());
+                    var rangeEnd   = Math.max(startDate.getTime(), endDate.getTime());
+                    disabledRangesArray.push({ start: rangeStart, end: rangeEnd });
+                }
+            });
+        }
 
         var appendToElement = this;
         var days = 0;
@@ -72,6 +109,10 @@
             var slotRow = [];
             var slots = [];
 
+            var checkMidnight = new Date(selectedDate.getTime());
+            checkMidnight.setHours(0, 0, 0, 0);
+            var dayIsDisabled = (disabledDaysMidnightTimestamps.indexOf(checkMidnight.getTime()) !== -1);
+
             for (let index = startTimeInMins; index <= endTimeInMins;) {
                 var h1 = Math.floor(index/60);
                 var m1 = index%60;
@@ -82,25 +123,56 @@
                     disable:false,
                 };
 
-                if(maxDayTimeInMins && (maxDayTimeInMins < index)){
+                if(dayIsDisabled){
                     slotObject['disable'] = true;
                 }
 
-                if(minDayTimeInMins && (minDayTimeInMins > index)){
-                    slotObject['disable'] = true;
+                if(!dayIsDisabled){
+
+                    if(maxDayTimeInMins && (maxDayTimeInMins < index)){
+                        slotObject['disable'] = true;
+                    }
+                    if(minDayTimeInMins && (minDayTimeInMins > index)){
+                        slotObject['disable'] = true;
+                    }
+
+                    if(maxDateTimeInMins && ((selectedDateInMinutes + index) > maxDateTimeInMins)){
+                        slotObject['disable'] = true;
+                    }
+                    if(minDateTimeInMins && ((selectedDateInMinutes + index) < minDateTimeInMins)){
+                        slotObject['disable'] = true;
+                    }
+
+                    var slotDateObj = new Date(selectedDate.getTime());
+                    slotDateObj.setHours(h1, m1, 0, 0);
+                    var slotTS = slotDateObj.getTime();
+
+                    if (!slotObject['disable']) {
+                        if (disabledSlotsTimestamps.indexOf(slotTS) !== -1) {
+                            slotObject['disable'] = true;
+                        }
+                    }
+
+                    if(!slotObject['disable'] && disabledRangesArray.length > 0) {
+                        var slotRangeStart = slotTS;
+                        var slotRangeEnd   = slotTS + (timeStep * 60 * 1000);
+
+                        for(let r=0; r<disabledRangesArray.length; r++){
+                            var rStart = disabledRangesArray[r].start;
+                            var rEnd   = disabledRangesArray[r].end;
+
+                            if( (slotRangeStart < rEnd) && (slotRangeEnd > rStart) ){
+                                slotObject['disable'] = true;
+                                break;
+                            }
+                        }
+                    }
                 }
 
-                if(maxDateTimeInMins && ((selectedDateInMinutes+index)>maxDateTimeInMins)){
-                    slotObject['disable'] = true;
-                }
-
-                if(minDateTimeInMins && ((selectedDateInMinutes+index)<minDateTimeInMins)){
-                    slotObject['disable'] = true;
-                }
 
                 slotRow.push(slotObject);
                 slotCounter++;
-                
+
                 if(slotCounter == 4 || index == endTimeInMins){
                     slotCounter = 0;
                     slots.push(slotRow);
